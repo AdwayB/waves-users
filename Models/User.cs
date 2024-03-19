@@ -8,8 +8,8 @@ public enum UserType {
     User
 };
 
-public class User {
-  public Guid UserId { get; set; }
+public class User { 
+    public Guid UserId { get; set; } = Guid.Empty;
 
   [Required]
   [MinLength(3)]

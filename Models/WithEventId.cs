@@ -4,6 +4,6 @@ namespace waves_users.Models;
 
 public class WithEventId: User {
     [Required]
-    public Guid EventID { get; set; }
+    public List<Guid> EventID { get; set; }
     
 }

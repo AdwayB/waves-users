@@ -3,13 +3,12 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace waves_users.Models;
 
-public class SavedEvents {
+public class ProfilePhoto {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; }
 
     [BsonElement("userId")] public Guid UserId { get; set; } = Guid.Empty;
-    
-    [BsonElement("events")]
-    public List<string> Events { get; set; }
+
+    [BsonElement("photo")] public string Photo { get; set; } = string.Empty; // Upload a Base64 String
 }

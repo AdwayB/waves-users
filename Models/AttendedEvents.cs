@@ -7,9 +7,8 @@ public class AttendedEvents {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; }
-    
-    [BsonElement("userId")]
-    public string UserId { get; set; }
+
+    [BsonElement("userId")] public Guid UserId { get; set; } = Guid.Empty;
     
     [BsonElement("events")]
     public List<string> Events { get; set; }

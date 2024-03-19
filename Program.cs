@@ -24,11 +24,11 @@ builder.Services.AddEndpointsApiExplorer();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<PSQLDatabaseContext>(options => options.UseNpgsql(connectionString));
-
 builder.Services.AddSingleton<MongoDatabaseContext>();
 
-
 var app = builder.Build();
+
+app.UseMiddleware<JwtMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
@@ -41,5 +41,15 @@ app.UseAuthentication(); // Use authentication
 app.UseAuthorization();
 
 app.MapControllers();
+
+try {
+    var mongoContext = app.Services.GetRequiredService<MongoDatabaseContext>();
+    await mongoContext.EnsureIndexesCreatedAsync();
+    await mongoContext.SeedDataAsync();
+}
+catch (Exception ex) {
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred while setting up MongoDB.");
+}
 
 app.Run();
