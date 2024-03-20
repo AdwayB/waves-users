@@ -30,9 +30,20 @@ public class UserService : IUserService {
     
     return roles;
   }
+
+  public async Task<(List<User>, int)> GetAll(int pageNumber, int pageSize) {
+    var numberOfRecords = await _db.Users.CountAsync();
+    var response = await _db.Users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+    if (response.Count == 0) throw new ApplicationException("No users found.");
+    return (response, numberOfRecords);
+  }
   
   public async Task<User?> GetById(Guid id) {
     return await _db.Users.FirstOrDefaultAsync(x => x.UserId == id);
+  }
+  
+  public async Task<User?> GetByUsername(string username) {
+    return await _db.Users.FirstOrDefaultAsync(x => x.Username == username);
   }
   
   public async Task<User?> UpdatePassword(User userObj, string oldPassword) {
@@ -105,18 +116,18 @@ public class UserService : IUserService {
     }
   }
   
-  public async Task<ProfilePhoto?> GetProfilePhoto(ProfilePhoto profilePhoto) {
-    if (profilePhoto.UserId == Guid.Empty) {
-      throw new ApplicationException($"No profile photo found for user with ID: {profilePhoto.UserId}");
+  public async Task<ProfilePhoto?> GetProfilePhoto(User userObj) {
+    if (userObj.UserId == Guid.Empty) {
+      throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
     }
 
     try {
       var obj = await _mongoDb.ProfilePhotos
-        .Find(e => e.UserId == profilePhoto.UserId)
+        .Find(e => e.UserId == userObj.UserId)
         .FirstOrDefaultAsync();
 
       if (obj == null) {
-        throw new ApplicationException($"No profile photo found for user with ID: {profilePhoto.UserId}");
+        throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
       }
       
       return obj;
@@ -127,13 +138,13 @@ public class UserService : IUserService {
     }
   }
   
-  public async Task<ProfilePhoto?> DeleteProfilePhoto(ProfilePhoto profilePhoto) {
-    if (profilePhoto.UserId == Guid.Empty) {
-      throw new ApplicationException($"No profile photo found for user with ID: {profilePhoto.UserId}");
+  public async Task<User?> DeleteProfilePhoto(User userObj) {
+    if (userObj.UserId == Guid.Empty) {
+      throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
     }
     try {
-      await _mongoDb.ProfilePhotos.DeleteOneAsync(e => e.UserId == profilePhoto.UserId);
-      return profilePhoto;
+      await _mongoDb.ProfilePhotos.DeleteOneAsync(e => e.UserId == userObj.UserId);
+      return userObj;
     }
     catch (MongoException ex) {
       throw new ApplicationException($"An error occurred while deleting Profile Photo: {ex.Message}\n" +
@@ -148,23 +159,23 @@ public class UserService : IUserService {
     try {
       var obj = await _db.Users.FirstOrDefaultAsync(c => c.UserId == userObj.UserId);
           
-      if (obj != null) {
-        obj.Username = userObj.Username;
-        obj.LegalName = userObj.LegalName;
-        obj.Email = userObj.Email;
-        obj.MobileNumber = userObj.MobileNumber;
-        obj.Country = userObj.Country;
-        obj.Type = userObj.Type;
-        
-        _db.Users.Update(obj);
-        var isSuccess = await _db.SaveChangesAsync() > 0;
-        return isSuccess ? userObj : null;
+      if (obj == null) {
+        throw new ApplicationException($"No user found with id: {userObj.UserId}");
       }
+      obj.Username = userObj.Username;
+      obj.LegalName = userObj.LegalName;
+      obj.Email = userObj.Email;
+      obj.MobileNumber = userObj.MobileNumber;
+      obj.Country = userObj.Country;
+      obj.Type = userObj.Type;
+        
+      _db.Users.Update(obj);
+      var isSuccess = await _db.SaveChangesAsync() > 0;
+      return isSuccess ? userObj : null;
     } catch (Exception ex) {
       throw new ApplicationException($"An error occurred while updating User record: {ex.Message}\n" +
                                      $"{ex.StackTrace}");
     }
-    return null;
   }
 
   public async Task<User?> DeleteUser(User userObj) {
@@ -184,6 +195,27 @@ public class UserService : IUserService {
     }
     catch (Exception ex) {
       throw new ApplicationException($"An error occurred while deleting User record: {ex.Message}\n" +
+                                     $"{ex.StackTrace}");
+    }
+  }
+  
+  public async Task<SavedEvents?> GetSavedEvents(WithEventId withEventId) {
+    if (withEventId.UserId == Guid.Empty) {
+      throw new ApplicationException($"No userId provided.");
+    }
+
+    try {
+      var obj = await _mongoDb.SavedEvents
+        .Find(e => e.UserId == withEventId.UserId)
+        .FirstOrDefaultAsync();
+
+      if (obj == null) {
+        throw new ApplicationException($"No saved events found for user: {withEventId.UserId}");
+      }
+      return obj;
+    }
+    catch (MongoException ex) {
+      throw new ApplicationException($"An error occurred while fetching Saved Events: {ex.Message}\n" +
                                      $"{ex.StackTrace}");
     }
   }
@@ -282,29 +314,29 @@ public class UserService : IUserService {
     }
     return null;
   }
-
-  public async Task<SavedEvents?> GetSavedEvents(WithEventId withEventId) {
+  
+  public async Task<AttendedEvents?> GetAttendedEvents(WithEventId withEventId) {
     if (withEventId.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
 
     try {
-      var obj = await _mongoDb.SavedEvents
+      var obj = await _mongoDb.AttendedEvents
         .Find(e => e.UserId == withEventId.UserId)
         .FirstOrDefaultAsync();
 
       if (obj == null) {
-        throw new ApplicationException($"No saved events found for user: {withEventId.UserId}");
+        throw new ApplicationException($"No attended events found for user: {withEventId.UserId}");
       }
       return obj;
     }
     catch (MongoException ex) {
-      throw new ApplicationException($"An error occurred while fetching Saved Events: {ex.Message}\n" +
+      throw new ApplicationException($"An error occurred while fetching Attended Events: {ex.Message}\n" +
                                      $"{ex.StackTrace}");
     }
   }
   
-  public async Task<WithEventId?> AddAttendedEvents(WithEventId withEventId) {
+  public async Task<WithEventId?> AddToAttendedEvents(WithEventId withEventId) {
     if (withEventId.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
@@ -348,27 +380,6 @@ public class UserService : IUserService {
                                        $"{ex.StackTrace}");
       }
       return null;
-    }
-  }
-  
-  public async Task<AttendedEvents?> GetAttendedEvents(WithEventId withEventId) {
-    if (withEventId.UserId == Guid.Empty) {
-      throw new ApplicationException($"No userId provided.");
-    }
-
-    try {
-      var obj = await _mongoDb.AttendedEvents
-        .Find(e => e.UserId == withEventId.UserId)
-        .FirstOrDefaultAsync();
-
-      if (obj == null) {
-        throw new ApplicationException($"No attended events found for user: {withEventId.UserId}");
-      }
-      return obj;
-    }
-    catch (MongoException ex) {
-      throw new ApplicationException($"An error occurred while fetching Attended Events: {ex.Message}\n" +
-                                     $"{ex.StackTrace}");
     }
   }
 }
