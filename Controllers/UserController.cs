@@ -32,7 +32,7 @@ public class UserController : ControllerBase {
   [Authorize]
   [HttpGet("get-all-users/{pageNumber:int}/{pageSize:int}")]
   public async Task<IActionResult> GetAllUsers(int pageNumber = 1, int pageSize = 10) {
-    var user = this.GetUserFromContext();
+    var user = HttpContext.Items["User"];
     if (user is null) return Unauthorized("User not logged in. Check if User exists.");
     if (pageNumber < 1 || pageSize < 1) return BadRequest("Page Number and Size must be greater than 0.");
     
@@ -173,12 +173,12 @@ public class UserController : ControllerBase {
   
   [Authorize]
   [HttpGet("get-saved")]
-  public async Task<IActionResult> GetSavedEvents([FromBody] WithEventId request) {
+  public async Task<IActionResult> GetSavedEvents() {
     var user = this.GetUserFromContext();
     if (user is null) return Unauthorized("User not logged in. Check if User exists");
 
     try {
-      var result = await _userService.GetSavedEvents(request);
+      var result = await _userService.GetSavedEvents(user);
       return Ok(result);
     }
     catch (Exception ex) {
@@ -254,8 +254,9 @@ public class UserController : ControllerBase {
 
 public static class UserControllerExtensions {
   public static User? GetUserFromContext(this ControllerBase controller) {
-    if (controller.HttpContext.Items["User"] is User user) {
-      return user;
+    if (controller.HttpContext.Items.TryGetValue("User", out var user) && user is User)
+    {
+      return user as User;
     }
     return null;
   }

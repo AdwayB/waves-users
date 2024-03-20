@@ -33,6 +33,7 @@ public class UserService : IUserService {
 
   public async Task<(List<User>, int)> GetAll(int pageNumber, int pageSize) {
     var numberOfRecords = await _db.Users.CountAsync();
+    //OrderBy(x => x.UserId).
     var response = await _db.Users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
     if (response.Count == 0) throw new ApplicationException("No users found.");
     return (response, numberOfRecords);
@@ -199,18 +200,18 @@ public class UserService : IUserService {
     }
   }
   
-  public async Task<SavedEvents?> GetSavedEvents(WithEventId withEventId) {
-    if (withEventId.UserId == Guid.Empty) {
+  public async Task<SavedEvents?> GetSavedEvents(User userObj) {
+    if (userObj.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
 
     try {
       var obj = await _mongoDb.SavedEvents
-        .Find(e => e.UserId == withEventId.UserId)
+        .Find(e => e.UserId == userObj.UserId)
         .FirstOrDefaultAsync();
 
       if (obj == null) {
-        throw new ApplicationException($"No saved events found for user: {withEventId.UserId}");
+        throw new ApplicationException($"No saved events found for user: {userObj.UserId}");
       }
       return obj;
     }
@@ -315,18 +316,18 @@ public class UserService : IUserService {
     return null;
   }
   
-  public async Task<AttendedEvents?> GetAttendedEvents(WithEventId withEventId) {
-    if (withEventId.UserId == Guid.Empty) {
+  public async Task<AttendedEvents?> GetAttendedEvents(User userObj) {
+    if (userObj.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
 
     try {
       var obj = await _mongoDb.AttendedEvents
-        .Find(e => e.UserId == withEventId.UserId)
+        .Find(e => e.UserId == userObj.UserId)
         .FirstOrDefaultAsync();
 
       if (obj == null) {
-        throw new ApplicationException($"No attended events found for user: {withEventId.UserId}");
+        throw new ApplicationException($"No attended events found for user: {userObj.UserId}");
       }
       return obj;
     }

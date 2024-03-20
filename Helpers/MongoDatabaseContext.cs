@@ -9,7 +9,7 @@ public class MongoDatabaseContext {
     
     public MongoDatabaseContext(IConfiguration configuration) {
         _client = new MongoClient(configuration.GetConnectionString("MongoConnection"));
-        _database = _client.GetDatabase("admin");
+        _database = _client.GetDatabase("waves-database");
     }
     
     public IMongoCollection<SavedEvents> SavedEvents => _database.GetCollection<SavedEvents>("SavedEvents");

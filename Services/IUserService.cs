@@ -13,10 +13,10 @@ public interface IUserService {
     Task<User?> DeleteProfilePhoto(User userObj);
     Task<User?> UpdateUser(User userObj);
     Task<User?> DeleteUser(User userObj);
-    Task<SavedEvents?> GetSavedEvents(WithEventId withEventId);
+    Task<SavedEvents?> GetSavedEvents(User userObj);
     Task<WithEventId?> AddToSavedEvents(WithEventId withEventId);
     Task<WithEventId?> RemoveFromSavedEvents(WithEventId withEventId);
-    Task<AttendedEvents?> GetAttendedEvents(WithEventId withEventId);
+    Task<AttendedEvents?> GetAttendedEvents(User userObj);
     Task<WithEventId?> AddToAttendedEvents(WithEventId withEventId);
     // TODO: Add Admin/User Following Features, Consider using projection to maintain scalability.
 }

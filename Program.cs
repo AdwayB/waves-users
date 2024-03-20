@@ -1,5 +1,8 @@
+using System.Text;
 using dotenv.net;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using waves_users.Helpers;
 using waves_users.Models;
 using waves_users.Services;
@@ -18,6 +21,36 @@ builder
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = new TokenValidationParameters() {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents {
+            OnTokenValidated = async context => {  
+                var userService = context.HttpContext.RequestServices.GetRequiredService<IUserService>();
+                var userId = context.Principal?.FindFirst("userId")?.Value;
+                if (userId != null) {
+                    var user = await userService.GetById(Guid.Parse(userId));
+                    if (user != null) {
+                        context.HttpContext.Items["User"] = user;
+                    }
+                }
+            },
+            OnAuthenticationFailed = context => {
+            Console.WriteLine($"Authentication failed: Exception: {context.Exception.Message}");
+            return Task.CompletedTask;
+        }
+        };
+    });
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 // builder.Services.AddSwaggerGen();
@@ -27,8 +60,6 @@ builder.Services.AddDbContext<PSQLDatabaseContext>(options => options.UseNpgsql(
 builder.Services.AddSingleton<MongoDatabaseContext>();
 
 var app = builder.Build();
-
-app.UseMiddleware<JwtMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
@@ -44,7 +75,7 @@ app.MapControllers();
 
 try {
     var mongoContext = app.Services.GetRequiredService<MongoDatabaseContext>();
-    await mongoContext.EnsureIndexesCreatedAsync();
+    // await mongoContext.EnsureIndexesCreatedAsync();
     await mongoContext.SeedDataAsync();
 }
 catch (Exception ex) {
