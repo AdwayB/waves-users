@@ -221,12 +221,12 @@ public class UserController : ControllerBase {
 
   [Authorize]
   [HttpGet("get-attended")]
-  public async Task<IActionResult> GetAttendedEvents([FromBody] WithEventId request) {
+  public async Task<IActionResult> GetAttendedEvents() {
     var user = this.GetUserFromContext();
     if (user is null) return Unauthorized("User not logged in. Check if User exists");
 
     try {
-      var result = await _userService.GetAttendedEvents(request);
+      var result = await _userService.GetAttendedEvents(user);
       return Ok(result);
     }
     catch (Exception ex) {

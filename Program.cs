@@ -76,7 +76,7 @@ app.MapControllers();
 try {
     var mongoContext = app.Services.GetRequiredService<MongoDatabaseContext>();
     // await mongoContext.EnsureIndexesCreatedAsync();
-    await mongoContext.SeedDataAsync();
+    await mongoContext.SeedDataAsync(app.Services);
 }
 catch (Exception ex) {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
