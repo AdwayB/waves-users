@@ -47,7 +47,7 @@ public class UserService : IUserService {
     return await _db.Users.FirstOrDefaultAsync(x => x.Username == username);
   }
   
-  public async Task<User?> UpdatePassword(User userObj, string oldPassword) {
+  public async Task<User?> UpdatePassword(User userObj, UpdatePasswordRequestBody passwords) {
     if (userObj.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
@@ -63,11 +63,11 @@ public class UserService : IUserService {
                                      $"{ex.StackTrace}");
     }
     
-    if (!BCrypt.Net.BCrypt.Verify(oldPassword, obj.Password)) {
+    if (!BCrypt.Net.BCrypt.Verify(passwords.oldPassword, obj.Password)) {
       throw new ApplicationException($"Incorrect password provided for user: {userObj.Username}.");
     }
 
-    obj.Password = BCrypt.Net.BCrypt.HashPassword(userObj.Password);
+    obj.Password = BCrypt.Net.BCrypt.HashPassword(passwords.newPassword);
     try {
       _db.Users.Update(obj);
       await _db.SaveChangesAsync();

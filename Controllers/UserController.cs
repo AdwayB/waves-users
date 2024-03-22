@@ -78,13 +78,13 @@ public class UserController : ControllerBase {
   }
 
   [Authorize]
-  [HttpPatch("update-password")]
-  public async Task<IActionResult> UpdatePassword([FromBody] string oldPassword) {
+  [HttpPost("update-password")]
+  public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequestBody request) {
     var user = this.GetUserFromContext();
     if (user is null) return Unauthorized("User not logged in. Check if User exists.");
 
     try {
-      var result = await _userService.UpdatePassword(user, oldPassword);
+      var result = await _userService.UpdatePassword(user, request);
       return Ok(result);
     }
     catch (Exception ex) {
