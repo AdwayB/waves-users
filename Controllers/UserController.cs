@@ -60,6 +60,22 @@ public class UserController : ControllerBase {
       return StatusCode(500, $"An error occurred while getting user by id {id}: {ex.Message}");
     }
   }
+  
+  [Authorize]
+  [HttpGet("get-user-by-id-list")]
+  public async Task<IActionResult> GetUserByIdList([FromBody] List<string> id) {
+    var user = this.GetUserFromContext();
+    if (user is null) return Unauthorized("User not logged in. Check if User exists.");
+    if (id.Count == 0) return BadRequest("User ID query cannot be empty.");
+    
+    try {
+      var result = await _userService.GetByIdList(id.Select(Guid.Parse).ToList());
+      return Ok(result);
+    }
+    catch (Exception ex) {
+      return StatusCode(500, $"An error occurred while getting users by id list: {ex.Message}");
+    }
+  }
 
   [Authorize]
   [HttpGet("get-user-by-name/{name}")]
@@ -254,8 +270,7 @@ public class UserController : ControllerBase {
 
 public static class UserControllerExtensions {
   public static User? GetUserFromContext(this ControllerBase controller) {
-    if (controller.HttpContext.Items.TryGetValue("User", out var user) && user is User)
-    {
+    if (controller.HttpContext.Items.TryGetValue("User", out var user) && user is User) {
       return user as User;
     }
     return null;

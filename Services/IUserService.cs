@@ -6,6 +6,7 @@ public interface IUserService {
     Task<List<string>?> GetRoles(User userObj);
     Task<(List<User>, int)> GetAll(int pageNumber, int pageSize);
     Task<User?> GetById(Guid id);
+    Task<List<User>?> GetByIdList(List<Guid> id);
     Task<User?> GetByUsername(string username);
     Task<User?> UpdatePassword(User userObj, UpdatePasswordRequestBody passwords);
     Task<ProfilePhoto?> SetProfilePhoto(ProfilePhoto profilePhoto);

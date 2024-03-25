@@ -43,6 +43,10 @@ public class UserService : IUserService {
     return await _db.Users.FirstOrDefaultAsync(x => x.UserId == id);
   }
   
+  public async Task<List<User>?> GetByIdList(List<Guid> id) {
+    return await _db.Users.Where(x => id.Contains(x.UserId)).ToListAsync();
+  }
+  
   public async Task<User?> GetByUsername(string username) {
     return await _db.Users.FirstOrDefaultAsync(x => x.Username == username);
   }
