@@ -9,7 +9,8 @@ public enum UserType {
 };
 
 public class User { 
-    public Guid UserId { get; set; } = Guid.Empty;
+  [Required] 
+  public Guid UserId { get; set; } = Guid.Empty;
 
   [Required]
   [MinLength(3)]
