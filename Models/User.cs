@@ -37,8 +37,8 @@ public class User {
   public string Email { get; set; } = string.Empty;
   
   [Required]
-  [MinLength(7)]
-  [MaxLength(15)]
+  [MinLength(9)]
+  [MaxLength(17)]
   public string MobileNumber { get; set; } = string.Empty;
   
   [Required]
