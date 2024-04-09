@@ -26,7 +26,7 @@ public class User {
   
   [Required]
   [MinLength(4)]
-  [MaxLength(20)]
+  [MaxLength(200)]
   public string LegalName { get; set; } = string.Empty;
   
   [Required]
