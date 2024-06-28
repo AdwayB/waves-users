@@ -44,7 +44,14 @@ public class UserService : IUserService {
   }
   
   public async Task<List<User>?> GetByIdList(List<Guid> id) {
-    return await _db.Users.Where(x => id.Contains(x.UserId)).ToListAsync();
+    var usersList = new List<User>();
+    foreach (var uid in id.Where(uid => uid != Guid.Empty)) {
+      var user = await _db.Users.FirstOrDefaultAsync(x => x.UserId == uid);
+      if (user != null) {
+        usersList.Add(user);
+      }
+    }
+    return usersList;
   }
   
   public async Task<User?> GetByUsername(string username) {

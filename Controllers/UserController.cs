@@ -62,14 +62,14 @@ public class UserController : ControllerBase {
   }
   
   [Authorize]
-  [HttpGet("get-user-by-id-list")]
-  public async Task<IActionResult> GetUserByIdList([FromBody] List<string> id) {
+  [HttpPost("get-user-by-id-list")]
+  public async Task<IActionResult> GetUserByIdList([FromBody] List<string?> id) {
     var user = this.GetUserFromContext();
     if (user is null) return Unauthorized("User not logged in. Check if User exists.");
     if (id.Count == 0) return BadRequest("User ID query cannot be empty.");
     
     try {
-      var result = await _userService.GetByIdList(id.Select(Guid.Parse).ToList());
+      var result = await _userService.GetByIdList(id.ConvertAll(x => Guid.TryParse(x, out var convertedId) ? convertedId : Guid.Empty));
       return Ok(result);
     }
     catch (Exception ex) {
