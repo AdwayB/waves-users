@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using waves_users.Helpers;
+using waves_users.Middleware;
 using waves_users.Models;
 using waves_users.Services;
 
@@ -63,6 +64,15 @@ builder.Services.AddSwaggerGen(c =>
   c.IncludeXmlComments(xmlPath);
 });
 
+builder.Services.AddCors(options => {
+  options.AddPolicy("AllowLocalhost3000", policyBuilder => {
+    policyBuilder.WithOrigins("http://localhost:3000")
+      .AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowCredentials();
+  });
+});
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<PSQLDatabaseContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddSingleton<MongoDatabaseContext>();
@@ -80,6 +90,8 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowLocalhost3000");
+app.UseMiddleware<AuthInterceptor>();
 app.UseAuthentication(); // Use authentication
 app.UseAuthorization();
 
