@@ -221,9 +221,6 @@ public class UserService : IUserService {
         .Find(e => e.UserId == userObj.UserId)
         .FirstOrDefaultAsync();
 
-      if (obj == null) {
-        throw new ApplicationException($"No saved events found for user: {userObj.UserId}");
-      }
       return obj;
     }
     catch (MongoException ex) {

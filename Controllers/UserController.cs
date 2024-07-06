@@ -64,7 +64,7 @@ public class UserController : ControllerBase {
   [Authorize]
   [HttpPost("get-user-by-id-list")]
   public async Task<IActionResult> GetUserByIdList([FromBody] List<string?> id) {
-    var user = this.GetUserFromContext();
+    var user = this.GetUserFromContext(); 
     if (user is null) return Unauthorized("User not logged in. Check if User exists.");
     if (id.Count == 0) return BadRequest("User ID query cannot be empty.");
     
