@@ -35,7 +35,6 @@ public class UserService : IUserService {
     var numberOfRecords = await _db.Users.CountAsync();
     //OrderBy(x => x.UserId).
     var response = await _db.Users.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
-    if (response.Count == 0) throw new ApplicationException("No users found.");
     return (response, numberOfRecords);
   }
   
@@ -91,7 +90,7 @@ public class UserService : IUserService {
 
   public async Task<ProfilePhoto?> SetProfilePhoto(ProfilePhoto profilePhoto) {
     if (profilePhoto.UserId == Guid.Empty) {
-      throw new ApplicationException($"No profile photo found for user with ID: {profilePhoto.UserId}");
+      throw new ApplicationException("No userId provided.");
     }
 
     if (profilePhoto.Photo.Length == 0) {
@@ -130,17 +129,13 @@ public class UserService : IUserService {
   
   public async Task<ProfilePhoto?> GetProfilePhoto(User userObj) {
     if (userObj.UserId == Guid.Empty) {
-      throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
+      throw new ApplicationException($"No userId provided.");
     }
 
     try {
       var obj = await _mongoDb.ProfilePhotos
         .Find(e => e.UserId == userObj.UserId)
         .FirstOrDefaultAsync();
-
-      if (obj == null) {
-        throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
-      }
       
       return obj;
     }
@@ -152,7 +147,7 @@ public class UserService : IUserService {
   
   public async Task<User?> DeleteProfilePhoto(User userObj) {
     if (userObj.UserId == Guid.Empty) {
-      throw new ApplicationException($"No profile photo found for user with ID: {userObj.UserId}");
+      throw new ApplicationException($"No userId provided.");
     }
     try {
       await _mongoDb.ProfilePhotos.DeleteOneAsync(e => e.UserId == userObj.UserId);
@@ -174,12 +169,19 @@ public class UserService : IUserService {
       if (obj == null) {
         throw new ApplicationException($"No user found with id: {userObj.UserId}");
       }
-      obj.Username = userObj.Username;
-      obj.LegalName = userObj.LegalName;
-      obj.Email = userObj.Email;
-      obj.MobileNumber = userObj.MobileNumber;
-      obj.Country = userObj.Country;
-      obj.Type = userObj.Type;
+
+      if (await GetByUsername(userObj.Username) != null) {
+        throw new ApplicationException($"User with username: {userObj.Username} already exists.");
+      }
+
+      foreach (var property in typeof(User).GetProperties()) {
+        var existingValue = property.GetValue(obj);
+        var newValue = property.GetValue(userObj);
+
+        if (!Equals(existingValue, newValue)) {
+          property.SetValue(obj, newValue);
+        }
+      }
         
       _db.Users.Update(obj);
       var isSuccess = await _db.SaveChangesAsync() > 0;
@@ -197,13 +199,14 @@ public class UserService : IUserService {
     
     try {
       var obj = await _db.Users.FirstOrDefaultAsync(c => c.UserId == userObj.UserId);
-      if (obj != null) {
-        _db.Users.Remove(obj);
-        var isSuccess = await _db.SaveChangesAsync() > 0;
-        return isSuccess ? userObj : null;
-      }
 
-      return null;
+      if (obj == null) {
+        return null;
+      }
+      
+      _db.Users.Remove(obj);
+      var isSuccess = await _db.SaveChangesAsync() > 0;
+      return isSuccess ? userObj : null;
     }
     catch (Exception ex) {
       throw new ApplicationException($"An error occurred while deleting User record: {ex.Message}\n" +
