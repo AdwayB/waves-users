@@ -21,7 +21,7 @@ public class User {
   [Required]
   [MinLength(8)]
   [MaxLength(120)]
-  [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,120}$", ErrorMessage = "Password must be at least 8 characters long and contain at least one letter and one number.")]
+  [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,120}$|^\$2[ayb]\$.{56}$", ErrorMessage = "Password must be at least 8 characters long and contain at least one letter and one number, or a valid BCrypt hash.")]
   public string Password { get; set; } = string.Empty;
   
   [Required]

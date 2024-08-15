@@ -12,7 +12,7 @@ public interface IUserService {
     Task<ProfilePhoto?> SetProfilePhoto (ProfilePhoto profilePhoto);
     Task<ProfilePhoto?> GetProfilePhoto (User userObj);
     Task<User?> DeleteProfilePhoto (User userObj);
-    Task<User?> UpdateUser (User userObj);
+    Task<(User?, int)> UpdateUser (User userObj);
     Task<User?> DeleteUser (User userObj);
     Task<SavedEvents?> GetSavedEvents (User userObj);
     Task<WithEventId?> AddToSavedEvents (WithEventId withEventId);

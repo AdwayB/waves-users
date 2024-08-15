@@ -159,7 +159,7 @@ public class UserService : IUserService {
     }
   }
   
-  public async Task<User?> UpdateUser(User userObj) {
+  public async Task<(User?, int)> UpdateUser(User userObj) {
     if (userObj.UserId == Guid.Empty) {
       throw new ApplicationException($"No userId provided.");
     }
@@ -169,23 +169,24 @@ public class UserService : IUserService {
       if (obj == null) {
         throw new ApplicationException($"No user found with id: {userObj.UserId}");
       }
-
-      if (await GetByUsername(userObj.Username) != null) {
-        throw new ApplicationException($"User with username: {userObj.Username} already exists.");
-      }
-
-      foreach (var property in typeof(User).GetProperties()) {
-        var existingValue = property.GetValue(obj);
-        var newValue = property.GetValue(userObj);
-
-        if (!Equals(existingValue, newValue)) {
-          property.SetValue(obj, newValue);
-        }
-      }
-        
-      _db.Users.Update(obj);
+      
+      _db.Attach(obj);
+      
+      if (!string.IsNullOrEmpty(userObj.LegalName) && obj.LegalName != userObj.LegalName)
+        obj.LegalName = userObj.LegalName;
+      
+      if (!string.IsNullOrEmpty(userObj.Email) && obj.Email != userObj.Email)
+        obj.Email = userObj.Email;
+      
+      if (!string.IsNullOrEmpty(userObj.MobileNumber) && obj.MobileNumber != userObj.MobileNumber)
+        obj.MobileNumber = userObj.MobileNumber;
+      
+      if (!string.IsNullOrEmpty(userObj.Type) && obj.Type != userObj.Type)
+        obj.Type = userObj.Type;
+      
+      _db.Entry(obj).State = EntityState.Modified; 
       var isSuccess = await _db.SaveChangesAsync() > 0;
-      return isSuccess ? userObj : null;
+      return isSuccess ? (userObj, 1) : (null, 0);
     } catch (Exception ex) {
       throw new ApplicationException($"An error occurred while updating User record: {ex.Message}\n" +
                                      $"{ex.StackTrace}");

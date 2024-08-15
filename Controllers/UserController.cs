@@ -159,16 +159,16 @@ public class UserController : ControllerBase {
   
   [Authorize]
   [HttpPatch("update-user")]
-  public async Task<IActionResult> UpdateUser() {
-    var user = this.GetUserFromContext();
-    if (user is null) return Unauthorized("User not logged in. Check if User exists");
-    
+  public async Task<IActionResult> UpdateUser([FromBody] User user) {
     try {
       var result = await _userService.UpdateUser(user);
-      return Ok(result);
+      return result.Item2 switch {
+        1 => Ok(result.Item1),
+        _ => StatusCode(500, $"An error occurred while updating user {user.UserId}. \n {result}")
+      };
     }
     catch (Exception ex) {
-      return StatusCode(500, $"An error occurred while updating user {user.UserId}: {ex.Message}");
+      return StatusCode(500, ex);
     }
   }
   
