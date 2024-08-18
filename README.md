@@ -9,3 +9,8 @@
 - CRUD Operations for User Data.
 - Profile Photo Management.
 - Event Saving/Bookmarking and Attendance Tracking.
+
+## Other `waves-ems` Components
+- [**`waves`**](https://github.com/AdwayB/waves)
+- [**`waves-server`**](https://github.com/AdwayB/waves-server)
+- [**`waves-events`**](https://github.com/AdwayB/waves-events)
