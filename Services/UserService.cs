@@ -99,6 +99,7 @@ public class UserService : IUserService {
 
     using (var session = await _mongoDb.StartSessionAsync()) {
       try {
+        session.StartTransaction();
         var obj = await _mongoDb.ProfilePhotos
           .Find(session, e => e.UserId == profilePhoto.UserId)
           .FirstOrDefaultAsync();

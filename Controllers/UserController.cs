@@ -110,15 +110,15 @@ public class UserController : ControllerBase {
 
   [Authorize]
   [HttpPost("set-profile-photo")]
-  public async Task<IActionResult> SetProfilePhoto([FromBody] string photo) {
+  public async Task<IActionResult> SetProfilePhoto([FromBody] ProfilePhotoRequest photo) {
     var user = this.GetUserFromContext();
     if (user is null) return Unauthorized("User not logged in. Check if User exists");
-    if (photo.Length == 0) return BadRequest("Photo cannot be empty.");
+    if (photo.ProfilePhotoAsString.Length == 0) return BadRequest("Photo cannot be empty.");
     
     try {
       var result = await _userService.SetProfilePhoto( new ProfilePhoto{
         UserId = user.UserId,
-        Photo = photo
+        Photo = photo.ProfilePhotoAsString
       });
       return Ok(result);
     }
